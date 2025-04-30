@@ -21,58 +21,65 @@ let client;
 })();
 //ログイン
 app.post("/login", async (req, res) => {
-  const body = req.body;
-  const name = body.name;
-  const pass = body.pass;
-  const [data] = await client.execute(
-    "SELECT name,pass,token FROM users where name =(?)",
-    [name]
-  );
-  if (data.length > 0) {
-    const hashedpass = data[0].pass;
-    const result = await bcrypt.compare(pass, hashedpass);
-    if (result) {
-      return res.status(200).send(data[0].token);
-    } else {
-      return res.status(400).send("ログイン情報が違います");
+  try {
+    const body = req.body;
+    const name = body.name;
+    const pass = body.pass;
+    const [data] = await client.execute(
+      "SELECT name,pass,token FROM users where name =(?)",
+      [name]
+    );
+    if (data.length > 0) {
+      const hashedpass = data[0].pass;
+      const result = await bcrypt.compare(pass, hashedpass);
+      if (result) {
+        return res.status(200).send(data[0].token);
+      } else {
+        return res.status(400).send("ログイン情報が違います");
+      }
     }
+    return res.status(400).send("ログイン情報が違います");
+  } catch (e) {
+    return res.status(500).send("サーバーエラー");
   }
-  return res.status(400).send("ログイン情報が違います");
 });
 //ユーザー登録
 app.post("/register", async (req, res) => {
-  const body = req.body;
-  const name = body.name;
-  const pass = body.pass;
-  if (name === "" || pass === "")
-    return res.status(400).send("すべて入力してください");
-  if (name.length > 10 || name.length < 5)
-    return res
-      .status(400)
-      .send("ユーザー名は5文字以上10文字以内で入力してください");
-  if (pass.length > 20)
-    return res.status(400).send("パスワードは20文字以内で入力してください");
-  const [data] = await client.execute(
-    "SELECT name FROM users where name =(?)",
-    [name]
-  );
-  if (data.length > 0) return res.status(400).send("重複するユーザーネーム");
-
-  let inUnique = false;
-  let token;
-  while (!inUnique) {
-    token = uuidv4();
-    const [data1] = await client.execute(
-      "SELECT token FROM users where token =(?)",
-      [token]
+  try {
+    const body = req.body;
+    const name = body.name;
+    const pass = body.pass;
+    if (!name.trim() || !pass.trim())
+      return res.status(400).send("すべて入力してください");
+    if (name.length > 10 || name.length < 5)
+      return res
+        .status(400)
+        .send("ユーザー名は5文字以上10文字以内で入力してください");
+    if (pass.length > 20)
+      return res.status(400).send("パスワードは20文字以内で入力してください");
+    const [data] = await client.execute(
+      "SELECT name FROM users where name =(?)",
+      [name]
     );
-    if (data1.length === 0) inUnique = true;
+    if (data.length > 0) return res.status(400).send("重複するユーザーネーム");
+
+    let inUnique = false;
+    let token;
+    while (!inUnique) {
+      token = uuidv4();
+      const [data1] = await client.execute(
+        "SELECT token FROM users where token =(?)",
+        [token]
+      );
+      if (data1.length === 0) inUnique = true;
+    }
+    const hashed = await bcrypt.hash(pass, 10);
+    await client.query(
+      "INSERT INTO users (name, pass, token) VALUES (?, ?, ?)",
+      [name, hashed, token]
+    );
+    return res.status(200).send(token);
+  } catch (e) {
+    return res.status(500).send("サーバーエラー");
   }
-  const hashed = bcrypt.hashSync(pass, 10);
-  await client.query("INSERT INTO users (name, pass, token) VALUES (?, ?, ?)", [
-    name,
-    hashed,
-    token,
-  ]);
-  res.status(200).send(token);
 });

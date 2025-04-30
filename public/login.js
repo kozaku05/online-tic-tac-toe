@@ -26,7 +26,7 @@ async function register() {
   const name = document.getElementById("register-name").value;
   const pass = document.getElementById("register-pass").value;
   const repass = document.getElementById("repass").value;
-  if (name === "" || pass === "" || repass === "")
+  if (!name.trim() || !pass.trim() || !repass.trim())
     return (message.textContent = "すべて入力してください");
   if (pass !== repass)
     return (message.textContent = "パスワードが一致しません");
