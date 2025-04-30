@@ -6,7 +6,6 @@ const app = express();
 const server = http.createServer(app);
 const bcrypt = require("bcrypt");
 const { v4: uuidv4 } = require("uuid");
-server.listen(3000);
 app.use(express.static("./public"));
 app.use(express.json());
 let client;
@@ -18,18 +17,39 @@ let client;
     password: "root",
     database: "TicTacToe",
   });
+  server.listen(3000);
 })();
+//ログイン
+app.post("/login", async (req, res) => {
+  const body = req.body;
+  const name = body.name;
+  const pass = body.pass;
+  const [data] = await client.execute(
+    "SELECT name,pass,token FROM users where name =(?)",
+    [name]
+  );
+  if (data.length > 0) {
+    const hashedpass = data[0].pass;
+    const result = await bcrypt.compare(pass, hashedpass);
+    if (result) {
+      return res.status(200).send(data[0].token);
+    } else {
+      return res.status(400).send("ログイン情報が違います");
+    }
+  }
+  return res.status(400).send("ログイン情報が違います");
+});
 //ユーザー登録
 app.post("/register", async (req, res) => {
   const body = req.body;
   const name = body.name;
-  let pass = body.pass;
+  const pass = body.pass;
   if (name === "" || pass === "")
     return res.status(400).send("すべて入力してください");
   if (name.length > 10 || name.length < 5)
     return res
       .status(400)
-      .send("ユーザー名は10文字以上5文字以内で入力してください");
+      .send("ユーザー名は5文字以上10文字以内で入力してください");
   if (pass.length > 20)
     return res.status(400).send("パスワードは20文字以内で入力してください");
   const [data] = await client.execute(
@@ -56,4 +76,3 @@ app.post("/register", async (req, res) => {
   ]);
   res.status(200).send(token);
 });
-app.post("/login", async (req, res) => {});
