@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ログイン・オンラインOXゲーム</title>
+  </head>
+  <body>
+    <h1 id="message"></h1>
+    <div class="login-form">
+      <input type="text" id="login-name" placeholder="username" />
+      <input type="text" id="login-pass" placeholder="password" />
+      <input type="submit" value="ログイン" onclick="login()" />
+    </div>
+    <div class="register-form">
+      <input type="text" id="register-name" placeholder="username" />
+      <input type="text" id="register-pass" placeholder="password" />
+      <input type="text" id="repass" placeholder="retype-password" />
+      <input type="submit" value="登録" onclick="register()" />
+    </div>
+  </body>
+  <script src="login.js"></script>
+</html>
