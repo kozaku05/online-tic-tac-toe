@@ -10,6 +10,7 @@ const bcrypt = require("bcrypt");
 app.use(express.static("./public"));
 app.use(express.json());
 let client;
+let port = 3000;
 (async () => {
   client = await mysql.createConnection({
     host: "localhost",
@@ -18,7 +19,7 @@ let client;
     password: "root",
     database: "TicTacToe",
   });
-  server.listen(3000);
+  server.listen(port);
   console.log("http://localhost:3000");
 })();
 //ログイン

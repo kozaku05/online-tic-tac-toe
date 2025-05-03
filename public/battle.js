@@ -4,7 +4,12 @@ if (!token) {
   alert("ログインしてください");
   location.href = "./login.html";
 }
-const ws = new WebSocket("ws://192.168.10.103:3000");
+try {
+  const ws = new WebSocket("ws://192.168.10.103:3000");
+} catch (e) {
+  alert("サーバーに接続できませんでした。");
+  location.href = "/";
+}
 ws.onopen = () => {
   ws.send(JSON.stringify({ type: "battle", token: token }));
 };
