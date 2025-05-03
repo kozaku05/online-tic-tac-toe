@@ -1,3 +1,6 @@
+if (localStorage.getItem("token")) {
+  location.href = "/";
+}
 const message = document.getElementById("message");
 async function login() {
   const name = document.getElementById("login-name").value;
@@ -7,7 +10,7 @@ async function login() {
   }
   const res = await fetch("/login", {
     method: "POST",
-    headers: { "Content-type": "application/json" },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       name: name,
       pass: pass,
@@ -51,4 +54,24 @@ async function register() {
     localStorage.setItem("token", token);
     location.href = "/";
   }
+}
+let isRegister = false;
+const lfrom = document.getElementById("lform");
+const rform = document.getElementById("rform");
+const submit = document.getElementById("button");
+rform.classList.add("hide");
+function openLR() {
+  isRegister
+    ? ((isRegister = false),
+      lfrom.classList.add("visi"),
+      lfrom.classList.remove("hide"),
+      rform.classList.add("hide"),
+      rform.classList.remove("visi"),
+      (submit.textContent = "登録はこちらから"))
+    : ((isRegister = true),
+      lfrom.classList.add("hide"),
+      lfrom.classList.remove("visi"),
+      rform.classList.add("visi"),
+      rform.classList.remove("hide"),
+      (submit.textContent = "ログインはこちらから"));
 }

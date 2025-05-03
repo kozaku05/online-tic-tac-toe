@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>対戦・オンラインOXゲーム</title>
+    <link rel="stylesheet" href="battle.css" />
+  </head>
+  <body>
+    <h1 id="message"></h1>
+    <table id="board" class="hide">
+      <tr>
+        <td id="0,0">_</td>
+        <td id="0,1">_</td>
+        <td id="0,2">_</td>
+      </tr>
+      <tr>
+        <td id="1,0">_</td>
+        <td id="1,1">_</td>
+        <td id="1,2">_</td>
+      </tr>
+      <tr>
+        <td id="2,0">_</td>
+        <td id="2,1">_</td>
+        <td id="2,2">_</td>
+      </tr>
+    </table>
+    <button id="re" onclick="location.reload()" class="hide">もう一度</button>
+    <button id="backTitle" onclick="location.href='/'">タイトルに戻る</button>
+  </body>
+  <script src="battle.js"></script>
+</html>

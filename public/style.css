@@ -1,0 +1,112 @@
+/* ベースのスタイル */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background-color: #f4f4f9;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  text-align: center;
+  padding: 20px;
+}
+
+/* ヘッダー */
+.top {
+  background-color: #ff6b6b;
+  color: white;
+  width: 100%;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+}
+
+.top h1 {
+  font-size: 36px;
+}
+
+/* ユーザー情報 */
+.info {
+  background-color: white;
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 30px;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.info h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.info h2#user {
+  font-weight: bold;
+  font-size: 22px;
+}
+
+/* ランクマッチボタン */
+.rank {
+  margin-bottom: 20px;
+}
+
+.rank input {
+  padding: 10px 20px;
+  font-size: 18px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.rank input:hover {
+  background-color: #45a049;
+}
+
+/* ログアウトボタン */
+button {
+  padding: 10px 20px;
+  font-size: 18px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #d32f2f;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+
+  .top h1 {
+    font-size: 28px;
+  }
+
+  .info h2 {
+    font-size: 16px;
+  }
+
+  .rank input,
+  button {
+    width: 100%;
+    font-size: 16px;
+    padding: 12px;
+  }
+}

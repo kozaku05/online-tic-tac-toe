@@ -3,21 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="login.css" />
     <title>ログイン・オンラインOXゲーム</title>
   </head>
   <body>
+    <div class="top">
+      <h1>オンラインOXゲーム</h1>
+    </div>
     <h1 id="message"></h1>
-    <div class="login-form">
+    <div class="login-form" id="lform">
       <input type="text" id="login-name" placeholder="username" />
-      <input type="text" id="login-pass" placeholder="password" />
+      <input type="password" id="login-pass" placeholder="password" />
       <input type="submit" value="ログイン" onclick="login()" />
     </div>
-    <div class="register-form">
+    <div class="register-form" id="rform">
       <input type="text" id="register-name" placeholder="username" />
       <input type="text" id="register-pass" placeholder="password" />
       <input type="text" id="repass" placeholder="retype-password" />
       <input type="submit" value="登録" onclick="register()" />
     </div>
+
+    <button onclick="openLR()" id="button">登録はこちらから</button>
   </body>
   <script src="login.js"></script>
 </html>

@@ -1,0 +1,94 @@
+/* 全体のレイアウト */
+body {
+  font-family: "Arial", sans-serif;
+  background-color: #f0f2f5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin: 0;
+}
+
+h1#message {
+  color: red;
+  margin-bottom: 20px;
+  height: 1.5em;
+}
+
+/* ログイン・登録フォーム共通スタイル */
+.login-form,
+.register-form {
+  background-color: white;
+  padding: 20px 30px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 250px;
+  margin-bottom: 15px;
+}
+
+/* 入力フィールド・ボタン共通スタイル */
+input[type="text"],
+input[type="password"],
+input[type="submit"] {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* サブミットボタン */
+input[type="submit"] {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+input[type="submit"]:hover {
+  background-color: #0056b3;
+}
+
+/* フォーム切替ボタン */
+button#button {
+  background-color: transparent;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 14px;
+}
+
+button#button:hover {
+  color: #0056b3;
+}
+
+/* 表示・非表示用クラス */
+.hide {
+  display: none;
+}
+
+.visi {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 入力エラー強調 */
+input.error {
+  border-color: red;
+  background-color: #ffe6e6;
+}
+.top {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.top h1 {
+  font-size: 32px;
+  color: #333;
+}

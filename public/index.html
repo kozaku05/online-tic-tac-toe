@@ -4,10 +4,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>オンラインOXゲーム</title>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <h1>OXゲーム</h1>
-    <input type="submit" value="ランクマッチ" />
+    <div class="top">
+      <h1>オンラインOXゲーム</h1>
+    </div>
+    <div class="info">
+      <h2 id="user"></h2>
+      <h2 id="point"></h2>
+      <h2 id="win"></h2>
+      <h2 id="lose"></h2>
+      <h2 id="winrate"></h2>
+    </div>
+    <div class="rank">
+      <input
+        type="submit"
+        value="ランクマッチ"
+        onclick="location.href='./battle.html'"
+      />
+    </div>
+    <button onclick="logout()">ログアウト</button>
   </body>
-  <script src="login.js"></script>
+  <script src="script.js"></script>
 </html>
