@@ -21,6 +21,10 @@ let port = 3000;
   });
   server.listen(port);
 })();
+//サーバーオンライン確認
+app.get("/ping", (req, res) => {
+  res.status(200).send("pong");
+});
 //ログイン エラーハンドリング済み
 app.post("/login", async (req, res) => {
   try {

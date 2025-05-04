@@ -1,3 +1,13 @@
+try {
+  const res = await fetch("/ping", {
+    method: "GET",
+  });
+} catch (e) {
+  if (!res.ok) {
+    alert("サーバーはオフラインです");
+    return;
+  }
+}
 const message = document.getElementById("message");
 const token = localStorage.getItem("token");
 if (!token) {
