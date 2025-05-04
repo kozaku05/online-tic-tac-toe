@@ -2,7 +2,7 @@ if (localStorage.getItem("token")) {
   location.href = "/";
 }
 try {
-  const res = await fetch("/ping", {
+  const res = fetch("/ping", {
     method: "GET",
   });
 } catch (e) {

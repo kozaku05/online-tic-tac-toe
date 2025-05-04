@@ -1,5 +1,5 @@
 try {
-  const res = await fetch("/ping", {
+  const res = fetch("/ping", {
     method: "GET",
   });
 } catch (e) {
