@@ -4,8 +4,9 @@ if (!token) {
   alert("ログインしてください");
   location.href = "./login.html";
 }
+let ws;
 try {
-  const ws = new WebSocket("ws://192.168.10.103:3000");
+  ws = new WebSocket("ws://192.168.10.103:3000");
 } catch (e) {
   alert("サーバーに接続できませんでした。");
   location.href = "/";
@@ -18,6 +19,7 @@ let shape;
 let opponentName;
 ws.onmessage = (event) => {
   const data = JSON.parse(event.data);
+
   if (data.type === "error") {
     alert(data.message);
     location.href = "/";
@@ -79,6 +81,16 @@ ws.onmessage = (event) => {
     re.classList.remove("hide");
     return;
   }
+  if (data.type === "move") {
+    const cell = document.getElementById(`${data.y},${data.x}`);
+    cell.textContent = data.shape;
+    cell.style.cursor = "not-allowed";
+    if (data.shape === shape) {
+      message.textContent = opponentName + "の番です！";
+    } else {
+      message.textContent = "あなたの番です！→" + shape;
+    }
+  }
   if (data.type === "winner") {
     message.textContent = "あなたの勝ちです！";
     backTitle.classList.remove("hide");
@@ -96,16 +108,6 @@ ws.onmessage = (event) => {
     re.classList.remove("hide");
     message.textContent = "引き分けです！";
     return;
-  }
-  if (data.type === "move") {
-    const cell = document.getElementById(`${data.y},${data.x}`);
-    cell.textContent = data.shape;
-    cell.style.cursor = "not-allowed";
-    if (data.shape === shape) {
-      message.textContent = opponentName + "の番です！";
-    } else {
-      message.textContent = "あなたの番です！→" + shape;
-    }
   }
 };
 ws.onclose = () => {

@@ -20,9 +20,8 @@ let port = 3000;
     database: "TicTacToe",
   });
   server.listen(port);
-  console.log("http://localhost:3000");
 })();
-//ログイン
+//ログイン エラーハンドリング済み
 app.post("/login", async (req, res) => {
   try {
     const body = req.body;
@@ -46,7 +45,7 @@ app.post("/login", async (req, res) => {
     return res.status(500).send("サーバーエラー");
   }
 });
-//ユーザー登録
+//ユーザー登録　エラーハンドリング済み
 app.post("/register", async (req, res) => {
   try {
     const body = req.body;
@@ -86,149 +85,251 @@ app.post("/register", async (req, res) => {
     return res.status(500).send("サーバーエラー");
   }
 });
-//ユーザーデータ返す
+//ユーザーデータ返す エラーハンドリング済み
 app.post("/getdata", async (req, res) => {
-  const token = req.body.token;
-  const [data] = await client.execute("select * from users where token=(?)", [
-    token,
-  ]);
-  if (data.length > 0) {
-    res.status(200).send(JSON.stringify(data[0]));
-  } else {
-    res.status(400).send("正しくないTOKEN");
+  try {
+    const token = req.body.token;
+    const [data] = await client.execute("select * from users where token=(?)", [
+      token,
+    ]);
+    if (data.length > 0) {
+      res.status(200).send(JSON.stringify(data[0]));
+    } else {
+      res.status(400).send("正しくないTOKEN");
+    }
+  } catch (e) {
+    res.status(500).send("サーバーエラー");
   }
 });
 //battle
 const battles = new Map();
 let waiting = null;
 wss.on("connection", (ws) => {
-  ws.on("message", async (message) => {
-    const data = JSON.parse(message);
-    if (data.type === "battle") {
-      const token = data.token;
-      const [user] = await client.execute(
-        "select * from users where token=(?)",
-        [token]
-      );
-      if (user.length > 0) {
-        ws.user = user[0];
-        ws.send(JSON.stringify({ type: "info", message: "マッチング開始" }));
-        let userdata = [ws, token];
-        if (waiting) {
-          const opponent = waiting;
-          waiting = null;
-          const gameId = uuidv4();
-          const player1 = opponent[0];
-          const player2 = ws;
-          //自分と対戦不可にする
-          if (opponent[1] === token) {
-            ws.send(
-              JSON.stringify({
-                type: "error",
-                message: "自分と対戦することはできません",
-              })
-            );
-            opponent[0].send(
-              JSON.stringify({
-                type: "error",
-                message: "自分と対戦することはできません",
-              })
-            );
-            ws.close();
-            return;
-          }
-          const [name1] = await client.execute(
-            "select name from users where token=(?)",
-            [opponent[1]]
-          );
-          const [name2] = await client.execute(
-            "select name from users where token=(?)",
-            [token]
-          );
-          let gameData = {
-            players: [player1, player2],
-            board: [
-              [0, 0, 0],
-              [0, 0, 0],
-              [0, 0, 0],
-            ],
-            turn: player1,
-            turnShape: "O",
-            timeout: null,
-          };
-          player1.send(
-            JSON.stringify({
-              type: "start",
-              gameId: gameId,
-              names: [name1[0].name, name2[0].name],
-              shape: "O",
-            })
-          );
-          player2.send(
-            JSON.stringify({
-              type: "start",
-              gameId: gameId,
-              names: [name1[0].name, name2[0].name],
-              shape: "X",
-            })
-          );
-          gameData.timeout = setTimeout(() => {
-            if (battles.has(gameId)) {
-              player1.send(
-                JSON.stringify({
-                  type: "timeout",
-                  turnShape: gameData.turnShape,
-                })
-              );
-              player2.send(
-                JSON.stringify({
-                  type: "timeout",
-                  turnShape: gameData.turnShape,
-                })
-              );
-              timeout(token, opponent[1]);
-              battles.delete(gameId);
-              return;
-            }
-          }, 15000);
-          gameData.tokens = [opponent[1], token];
-          battles.set(gameId, gameData);
-        } else {
-          //マッチング待機
-          waiting = userdata;
-          ws.send(JSON.stringify({ type: "waiting" }));
-        }
-      } else {
-        //正しくないTOKEN
-        ws.send(JSON.stringify({ type: "error", message: "正しくないTOKEN" }));
-        ws.close();
+  try {
+    ws.on("message", async (message) => {
+      let data;
+      try {
+        data = JSON.parse(message);
+      } catch (e) {
+        ws.send(
+          JSON.stringify({
+            type: "error",
+            message: "不正なデータの送信を検知しました",
+          })
+        );
         return;
       }
-    }
-    if (data.type === "move") {
-      const gameId = data.gameId;
-      if (battles.has(gameId)) {
-        const gameData = battles.get(gameId);
-        const player1 = gameData.players[0];
-        const player2 = gameData.players[1];
-        const token1 = gameData.tokens[0];
-        const token2 = gameData.tokens[1];
-        const board = gameData.board;
-        const turn = gameData.turn;
-        if (ws === turn) {
-          const x = data.x;
-          const y = data.y;
-          const shape = data.shape;
-          if (board[y][x] === 0) {
-            board[y][x] = turn === player1 ? "O" : "X";
-            //winner判定
-            function checkWinner() {
-              for (let i = 0; i < 3; i++) {
-                //横の判定
+      if (data.type === "battle") {
+        const token = data.token;
+        const [user] = await client.execute(
+          "select * from users where token=(?)",
+          [token]
+        );
+        if (user.length > 0) {
+          ws.user = user[0];
+          ws.send(JSON.stringify({ type: "info", message: "マッチング開始" }));
+          let userdata = [ws, token];
+          if (waiting) {
+            const opponent = waiting;
+            waiting = null;
+            let inUnique = false;
+            let gameId;
+            while (!inUnique) {
+              gameId = uuidv4();
+              if (!battles.has(gameId)) inUnique = true;
+            }
+            const player1 = opponent[0];
+            const player2 = ws;
+            //自分と対戦不可にする
+            if (opponent[1] === token) {
+              ws.send(
+                JSON.stringify({
+                  type: "error",
+                  message: "自分と対戦することはできません",
+                })
+              );
+              opponent[0].send(
+                JSON.stringify({
+                  type: "error",
+                  message: "自分と対戦することはできません",
+                })
+              );
+              ws.close();
+              return;
+            }
+            const [name1] = await client.execute(
+              "select name from users where token=(?)",
+              [opponent[1]]
+            );
+            const [name2] = await client.execute(
+              "select name from users where token=(?)",
+              [token]
+            );
+            let gameData = {
+              players: [player1, player2],
+              gameId: gameId,
+              board: [
+                [0, 0, 0],
+                [0, 0, 0],
+                [0, 0, 0],
+              ],
+              turn: player1,
+              turnShape: "O",
+              timeout: null,
+            };
+            player1.send(
+              JSON.stringify({
+                type: "start",
+                gameId: gameId,
+                names: [name1[0].name, name2[0].name],
+                shape: "O",
+              })
+            );
+            player2.send(
+              JSON.stringify({
+                type: "start",
+                gameId: gameId,
+                names: [name1[0].name, name2[0].name],
+                shape: "X",
+              })
+            );
+            gameData.timeout = setTimeout(() => {
+              if (battles.has(gameId)) {
+                player1.send(
+                  JSON.stringify({
+                    type: "timeout",
+                    turnShape: gameData.turnShape,
+                  })
+                );
+                player2.send(
+                  JSON.stringify({
+                    type: "timeout",
+                    turnShape: gameData.turnShape,
+                  })
+                );
+                timeout(token, opponent[1]);
+                battles.delete(gameId);
+                return;
+              }
+            }, 15000);
+            gameData.tokens = [opponent[1], token];
+            battles.set(gameId, gameData);
+          } else {
+            //マッチング待機
+            waiting = userdata;
+            ws.send(JSON.stringify({ type: "waiting" }));
+          }
+        } else {
+          //正しくないTOKEN
+          ws.send(
+            JSON.stringify({ type: "error", message: "正しくないTOKEN" })
+          );
+          ws.close();
+          return;
+        }
+      }
+      if (data.type === "move") {
+        const gameId = data.gameId;
+        if (battles.has(gameId)) {
+          const gameData = battles.get(gameId);
+          const player1 = gameData.players[0];
+          const player2 = gameData.players[1];
+          const token1 = gameData.tokens[0];
+          const token2 = gameData.tokens[1];
+          const board = gameData.board;
+          const turn = gameData.turn;
+          if (ws === turn) {
+            const x = data.x;
+            const y = data.y;
+            const shape = data.shape;
+            if (
+              typeof x !== "number" ||
+              typeof y !== "number" ||
+              x < 0 ||
+              x > 2 ||
+              y < 0 ||
+              y > 2
+            ) {
+              ws.send(
+                JSON.stringify({ type: "gameError", message: "不正な座標です" })
+              );
+              return;
+            }
+            if (shape !== "O" && shape !== "X") {
+              ws.send(
+                JSON.stringify({
+                  type: "gameError",
+                  message: "不正なシンボルです",
+                })
+              );
+              return;
+            }
+            if (board[y][x] === 0) {
+              board[y][x] = turn === player1 ? "O" : "X";
+              turn === player1
+                ? (gameData.turn = player2)
+                : (gameData.turn = player1);
+              player1.send(
+                JSON.stringify({ type: "move", x: x, y: y, shape: shape })
+              );
+              player2.send(
+                JSON.stringify({ type: "move", x: x, y: y, shape: shape })
+              );
+              //winner判定
+              function checkWinner() {
+                for (let i = 0; i < 3; i++) {
+                  //横の判定
+                  if (
+                    board[i][0] === "O" &&
+                    board[i][1] === "O" &&
+                    board[i][2] === "O"
+                  ) {
+                    player1.send(JSON.stringify({ type: "winner" }));
+                    player2.send(JSON.stringify({ type: "loser" }));
+                    pmPoint(token1, token2);
+                    battles.delete(gameId);
+                    return true;
+                  } else if (
+                    board[i][0] === "X" &&
+                    board[i][1] === "X" &&
+                    board[i][2] === "X"
+                  ) {
+                    player1.send(JSON.stringify({ type: "loser" }));
+                    player2.send(JSON.stringify({ type: "winner" }));
+                    pmPoint(token2, token1);
+                    battles.delete(gameId);
+                    return true;
+                  }
+                }
+                for (let i = 0; i < 3; i++) {
+                  //縦の判定
+                  if (
+                    board[0][i] === "O" &&
+                    board[1][i] === "O" &&
+                    board[2][i] === "O"
+                  ) {
+                    player1.send(JSON.stringify({ type: "winner" }));
+                    player2.send(JSON.stringify({ type: "loser" }));
+                    pmPoint(token1, token2);
+                    battles.delete(gameId);
+                    return true;
+                  } else if (
+                    board[0][i] === "X" &&
+                    board[1][i] === "X" &&
+                    board[2][i] === "X"
+                  ) {
+                    player1.send(JSON.stringify({ type: "loser" }));
+                    player2.send(JSON.stringify({ type: "winner" }));
+                    pmPoint(token2, token1);
+                    battles.delete(gameId);
+                    return true;
+                  }
+                }
+                //斜めの判定左上から右下
                 if (
-                  board[i][0] === "O" &&
-                  board[i][1] === "O" &&
-                  board[i][2] === "O"
+                  board[0][0] === "O" &&
+                  board[1][1] === "O" &&
+                  board[2][2] === "O"
                 ) {
                   player1.send(JSON.stringify({ type: "winner" }));
                   player2.send(JSON.stringify({ type: "loser" }));
@@ -236,9 +337,31 @@ wss.on("connection", (ws) => {
                   battles.delete(gameId);
                   return true;
                 } else if (
-                  board[i][0] === "X" &&
-                  board[i][1] === "X" &&
-                  board[i][2] === "X"
+                  board[0][0] === "X" &&
+                  board[1][1] === "X" &&
+                  board[2][2] === "X"
+                ) {
+                  player1.send(JSON.stringify({ type: "loser" }));
+                  player2.send(JSON.stringify({ type: "winner" }));
+                  pmPoint(token2, token1);
+                  battles.delete(gameId);
+                  return true;
+                }
+                //斜めの判定右上から左下
+                if (
+                  board[0][2] === "O" &&
+                  board[1][1] === "O" &&
+                  board[2][0] === "O"
+                ) {
+                  player1.send(JSON.stringify({ type: "winner" }));
+                  player2.send(JSON.stringify({ type: "loser" }));
+                  pmPoint(token1, token2);
+                  battles.delete(gameId);
+                  return true;
+                } else if (
+                  board[0][2] === "X" &&
+                  board[1][1] === "X" &&
+                  board[2][0] === "X"
                 ) {
                   player1.send(JSON.stringify({ type: "loser" }));
                   player2.send(JSON.stringify({ type: "winner" }));
@@ -247,73 +370,8 @@ wss.on("connection", (ws) => {
                   return true;
                 }
               }
-              for (let i = 0; i < 3; i++) {
-                //縦の判定
-                if (
-                  board[0][i] === "O" &&
-                  board[1][i] === "O" &&
-                  board[2][i] === "O"
-                ) {
-                  player1.send(JSON.stringify({ type: "winner" }));
-                  player2.send(JSON.stringify({ type: "loser" }));
-                  pmPoint(token1, token2);
-                  battles.delete(gameId);
-                  return true;
-                } else if (
-                  board[0][i] === "X" &&
-                  board[1][i] === "X" &&
-                  board[2][i] === "X"
-                ) {
-                  player1.send(JSON.stringify({ type: "loser" }));
-                  player2.send(JSON.stringify({ type: "winner" }));
-                  pmPoint(token2, token1);
-                  battles.delete(gameId);
-                  return true;
-                }
-              }
-              //斜めの判定左上から右下
-              if (
-                board[0][0] === "O" &&
-                board[1][1] === "O" &&
-                board[2][2] === "O"
-              ) {
-                player1.send(JSON.stringify({ type: "winner" }));
-                player2.send(JSON.stringify({ type: "loser" }));
-                pmPoint(token1, token2);
-                battles.delete(gameId);
-                return true;
-              } else if (
-                board[0][0] === "X" &&
-                board[1][1] === "X" &&
-                board[2][2] === "X"
-              ) {
-                player1.send(JSON.stringify({ type: "loser" }));
-                player2.send(JSON.stringify({ type: "winner" }));
-                pmPoint(token2, token1);
-                battles.delete(gameId);
-                return true;
-              }
-              //斜めの判定右上から左下
-              if (
-                board[0][2] === "O" &&
-                board[1][1] === "O" &&
-                board[2][0] === "O"
-              ) {
-                player1.send(JSON.stringify({ type: "winner" }));
-                player2.send(JSON.stringify({ type: "loser" }));
-                pmPoint(token1, token2);
-                battles.delete(gameId);
-                return true;
-              } else if (
-                board[0][2] === "X" &&
-                board[1][1] === "X" &&
-                board[2][0] === "X"
-              ) {
-                player1.send(JSON.stringify({ type: "loser" }));
-                player2.send(JSON.stringify({ type: "winner" }));
-                pmPoint(token2, token1);
-                battles.delete(gameId);
-                return true;
+              if (checkWinner()) {
+                return;
               }
               //引き分けの判定
               const isDraw = board.flat().every((cell) => cell !== 0);
@@ -324,57 +382,49 @@ wss.on("connection", (ws) => {
                 battles.delete(gameId);
                 return true;
               }
-              return false;
-            }
-            if (checkWinner()) {
-              return;
-            }
-            gameData.board = board;
-            if (turn === player1) {
-              gameData.turn = player2;
+              gameData.turnShape = turn === player1 ? "X" : "O";
+              unTimeout(gameData);
+              let nextTimeout;
+              let notimeout;
+              gameData.turn === player1
+                ? ((nextTimeout = token2), (notimeout = token1))
+                : ((nextTimeout = token1), (notimeout = token2));
+              createTimeout(nextTimeout, notimeout, gameData);
             } else {
-              gameData.turn = player1;
+              ws.send(
+                JSON.stringify({
+                  type: "gameError",
+                  message: "そのマスはすでに埋まっています",
+                })
+              );
             }
-            player1.send(
-              JSON.stringify({ type: "move", x: x, y: y, shape: shape })
-            );
-            player2.send(
-              JSON.stringify({ type: "move", x: x, y: y, shape: shape })
-            );
-            gameData.turnShape = turn === player1 ? "X" : "O";
-            unTimeout(gameData);
-            let nextTimeout;
-            let notimeout;
-            gameData.turn === player1
-              ? ((nextTimeout = token2), (notimeout = token1))
-              : ((nextTimeout = token1), (notimeout = token2));
-            createTimeout(nextTimeout, notimeout, gameData);
           } else {
             ws.send(
               JSON.stringify({
                 type: "gameError",
-                message: "そのマスはすでに埋まっています",
+                message: "あなたのターンではありません",
               })
             );
           }
-        } else {
-          ws.send(
-            JSON.stringify({
-              type: "gameError",
-              message: "あなたのターンではありません",
-            })
-          );
         }
       }
-    }
-  });
-  ws.on("close", () => {
-    if (waiting && waiting[0] === ws) {
-      waiting = null;
-    }
-  });
+    });
+    ws.on("close", () => {
+      if (waiting && waiting[0] === ws) {
+        waiting = null;
+      }
+    });
+  } catch (e) {
+    console.log(e);
+    ws.send(
+      JSON.stringify({
+        type: "error",
+        message: "サーバーエラー",
+      })
+    );
+  }
 });
-//プラスマイナスポイント
+//勝利時のポイント増減 win=+100 lose=-50 draw=+50
 async function pmPoint(winnerToken, loserToken) {
   await client.execute("UPDATE users SET win = win + 1 WHERE token = ?", [
     winnerToken,
@@ -430,10 +480,21 @@ async function draw(token1, token2) {
 function createTimeout(turnToken, noTurnToken, gameData) {
   gameData.timeout = setTimeout(() => {
     if (battles.has(gameData.gameId)) {
-      turn.send(JSON.stringify({ type: "timeout" }));
-      gameData.players[0].send(JSON.stringify({ type: "timeout" }));
+      gameData.players[0].send(
+        JSON.stringify({
+          type: "timeout",
+          turnShape: gameData.turnShape,
+        })
+      );
+      gameData.players[1].send(
+        JSON.stringify({
+          type: "timeout",
+          turnShape: gameData.turnShape,
+        })
+      );
+      timeout(noTurnToken, turnToken);
       battles.delete(gameData.gameId);
-      timeout(turn, noTurnToken);
+      return;
     }
   }, 15000);
 }
@@ -444,7 +505,7 @@ function unTimeout(gameData) {
     gameData.timeout = null;
   }
 }
-//タイムアウト時の処理
+//タイムアウト時の処理 timeoutUser=-50 notimeoutUser=+50
 async function timeout(token, timeoutToken) {
   let [timeoutRP] = await client.execute(
     "SELECT RP FROM users WHERE token = ?",

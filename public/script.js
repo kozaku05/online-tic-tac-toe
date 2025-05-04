@@ -23,12 +23,14 @@ function logout() {
     const rankpoint = data.RP;
     const win = data.win;
     const lose = data.lose;
+    const draw = data.draw;
     const winrate = Math.floor((win / (win + lose)) * 100);
     document.getElementById("user").textContent = "ユーザーネーム：" + username;
     document.getElementById("point").textContent =
       "ランクポイント：" + rankpoint;
     document.getElementById("win").textContent = "勝利数：" + win;
     document.getElementById("lose").textContent = "敗北数：" + lose;
+    document.getElementById("draw").textContent = "引き分け数：" + draw;
     document.getElementById("winrate").textContent = "勝率：" + winrate + "%";
   } catch (e) {
     localStorage.removeItem("token");
