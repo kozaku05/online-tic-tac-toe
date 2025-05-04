@@ -5,7 +5,6 @@ try {
 } catch (e) {
   if (!res.ok) {
     alert("サーバーはオフラインです");
-    return;
   }
 }
 const message = document.getElementById("message");
