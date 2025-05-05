@@ -1,10 +1,17 @@
-const http = require("http");
+const https = require("https");
 const express = require("express");
 const websocket = require("ws");
 const mysql = require("mysql2/promise");
+const fs = require("fs");
 const app = express();
 const { v4: uuidv4 } = require("uuid");
-const server = http.createServer(app);
+const server = https.createServer(
+  {
+    key: fs.readFileSync("./kozaku05.f5.si-key.pem"),
+    cert: fs.readFileSync("./kozaku05.f5.si-crt.pem"),
+  },
+  app
+);
 const wss = new websocket.Server({ server });
 const bcrypt = require("bcrypt");
 app.use(express.static("./public"));

@@ -1,12 +1,9 @@
-try {
-  const res = fetch("/ping", {
+(async () => {
+  const res = await fetch("/ping", {
     method: "GET",
   });
-} catch (e) {
-  if (!res.ok) {
-    alert("サーバーはオフラインです");
-  }
-}
+  if (!res.ok) alert("サーバーはオフラインです");
+})();
 const message = document.getElementById("message");
 const token = localStorage.getItem("token");
 if (!token) {
@@ -15,10 +12,10 @@ if (!token) {
 }
 let ws;
 try {
-  ws = new WebSocket("ws://192.168.10.103:3000");
+  ws = new WebSocket("wss://kozaku05.f5.si:3000");
 } catch (e) {
-  alert("サーバーに接続できませんでした。");
-  location.href = "/";
+  //alert("サーバーに接続できませんでした。");
+  //location.href = "/";
 }
 ws.onopen = () => {
   ws.send(JSON.stringify({ type: "battle", token: token }));

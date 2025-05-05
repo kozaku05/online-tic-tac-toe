@@ -1,12 +1,9 @@
-try {
-  const res = fetch("/ping", {
+(async () => {
+  const res = await fetch("/ping", {
     method: "GET",
   });
-} catch (e) {
-  if (!res.ok) {
-    alert("サーバーはオフラインです");
-  }
-}
+  if (!res.ok) alert("サーバーはオフラインです");
+})();
 const token = localStorage.getItem("token");
 if (!token) {
   location.href = "./login.html";

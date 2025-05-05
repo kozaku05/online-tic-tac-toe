@@ -1,14 +1,11 @@
-if (localStorage.getItem("token")) {
-  location.href = "/";
-}
-try {
-  const res = fetch("/ping", {
+(async () => {
+  const res = await fetch("/ping", {
     method: "GET",
   });
-} catch (e) {
-  if (!res.ok) {
-    alert("サーバーはオフラインです");
-  }
+  if (!res.ok) alert("サーバーはオフラインです");
+})();
+if (localStorage.getItem("token")) {
+  location.href = "/";
 }
 const message = document.getElementById("message");
 async function login() {
